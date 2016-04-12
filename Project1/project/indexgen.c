@@ -173,7 +173,6 @@ int main(int argc, char *argv[]){
     }
   }
   for(i = 0; i < k ; i++){
-
     int child = fork();
     if (child == 0){
       struct mq_attr mq_attr;
