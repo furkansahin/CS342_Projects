@@ -56,22 +56,22 @@ int s_create (int size)
 
 void *s_alloc(int objectsize)
 {
-	printf("s_alloc called\n");
-
 	if (objectsize < segmentsize){
 		struct mapper * tempseg = (struct mapper *)segmentptr;
 		while (tempseg -> next != NULL){
-			if (objectsize < (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - 24){
+			if (objectsize + sizeof(struct mapper) <= (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper)){
+
 				struct mapper *temp = tempseg -> next;
-				tempseg -> next = (struct mapper *)((char *)tempseg + 12 + (tempseg -> size));
+				tempseg -> next = (struct mapper *)((char *)tempseg + sizeof(struct mapper) + (tempseg -> size));
 				tempseg -> next -> next = temp;
 				tempseg -> next -> size = objectsize;
 				return (tempseg -> next) + 1;
 			}
 			tempseg = tempseg -> next;
 		}
-		if (objectsize < (char *)segmentptr + segmentsize - tempseg -> size - (char *)tempseg - 24){
-			tempseg -> next =(struct mapper *)((char *)tempseg + 12 + (tempseg -> size));
+		if (objectsize + sizeof(struct mapper) <= (char *)segmentptr + segmentsize - tempseg -> size - (char *)tempseg -  sizeof(struct mapper)){
+			tempseg -> next =(struct mapper *)((char *)tempseg + sizeof(struct mapper) + (tempseg -> size));
+
 			tempseg -> next -> next = NULL;
 			tempseg -> next -> size = objectsize;
 			return (tempseg -> next) + 1;
@@ -83,13 +83,52 @@ void *s_alloc(int objectsize)
 void s_free(void *objectptr)
 {
 
-	printf("s_free called\n");
+
+	struct mapper *tempseg = segmentptr;
+	while (tempseg -> next && tempseg -> next != (struct mapper *)objectptr - 1){
+		tempseg = tempseg->next;
+	}
+	if (tempseg -> next){
+		struct mapper *temp = tempseg -> next -> next;
+		tempseg -> next -> size = 0;
+		tempseg -> next -> next = NULL;
+		tempseg -> next = temp;
+	}
 
 	return;
 }
 
 void s_print(void)
 {
-	printf("s_print called\n");
+	struct mapper *tempseg = segmentptr;
+	printf("Alloc = from:%p\t to:%p\t size:%lu\t *****ALLOCATED FOR IMPLEMENTATION PURPOSES*****\n",
+																							tempseg,
+																							tempseg + 1,
+																							sizeof(struct mapper));
+	if (!tempseg -> next){
+		printf ("Free = from:%p\t to:%p\t size:%lu\n", tempseg + 1
+																								, (char *)tempseg + segmentsize
+																								, segmentsize - sizeof(struct mapper));
+	}
+	else{
+		while (tempseg){
+				if (tempseg -> size != 0){
+					printf("Alloc = from:%p\t to:%p\t size:%lu\n", tempseg
+																											, (char *)tempseg + tempseg -> size
+																											, tempseg -> size + sizeof(struct mapper));
+				}
+				if (tempseg -> next && (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper) > 0){
+					printf("Free = from:%p\t to:%p\t size:%lu\n", tempseg -> size + (char *)tempseg + sizeof(struct mapper),
+																										tempseg -> next,
+																										(char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
+				}
+				if (!tempseg -> next){
+					printf("Free = from:%p\t to:%p\t size:%lu\n", tempseg -> size + (char *)tempseg + sizeof(struct mapper),
+																										(char *)segmentptr + segmentsize,
+																										(char *)(segmentptr) + segmentsize - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
+				}
+				tempseg = tempseg -> next;
+		}
+	}
 	return;
 }
