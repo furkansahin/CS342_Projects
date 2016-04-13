@@ -17,10 +17,10 @@ int main(int argc, char *argv[])
 
 	size = atoi(argv[1]);
 
-	ret =  s_create (size * 1024); 
+	ret =  s_create (size * 1024);
 	if (ret == -1) {
-		printf ("could not create segment\n"); 
-		exit (1); 
+		printf ("could not create segment\n");
+		exit (1);
 	}
 
 	x1 = s_alloc(600);

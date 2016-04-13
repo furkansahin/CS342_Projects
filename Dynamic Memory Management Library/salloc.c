@@ -4,25 +4,21 @@
 #include <string.h>
 #include <pthread.h>
 
-struct fields{
-	unsigned long size;
-	void *segment;
-	struct fields *next;
-}
+struct mapper{
+	int size;
+	struct mapper *next;
+};
 
 /* Your Library Global Variables */
 void *segmentptr; // points to the start of memory segment to manage
 int   segmentsize;  // size of segment to manage
-void *segments;
 
 //You can define more variables if you wish
-struct fields *field;
 
 // printfs are for debugging; remove them when you use/submit your library
 
 int s_create (int size)
 {
-	////////////// GIVEN CODE STARTS ////////////
 	int i;
 	void *endptr;
 	char *cptr;
@@ -49,20 +45,38 @@ int s_create (int size)
 	for (i = 0; i < size; ++i)
 		cptr[i] = 0;
 	printf("---segment test ended - success\n");
-	////////// IMPLEMENTED CODE STARTS //////////
-	float x = ((float)size) / 84;
-	segments = segmentptr + (int)(20 * x);
 
-	/////////////////////////////////////////////
+	// adding a struct to the head of the segment to describe it as a free segment
+	((struct mapper *) segmentptr) -> size = 0;
+	((struct mapper *) segmentptr) -> next = NULL;
+	//////////////////////////////////////////////////////////////////////////////
 	return (0);
 }
 
 
 void *s_alloc(int objectsize)
 {
-
 	printf("s_alloc called\n");
 
+	if (objectsize < segmentsize){
+		struct mapper * tempseg = (struct mapper *)segmentptr;
+		while (tempseg -> next != NULL){
+			if (objectsize < (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - 24){
+				struct mapper *temp = tempseg -> next;
+				tempseg -> next = (struct mapper *)((char *)tempseg + 12 + (tempseg -> size));
+				tempseg -> next -> next = temp;
+				tempseg -> next -> size = objectsize;
+				return (tempseg -> next) + 1;
+			}
+			tempseg = tempseg -> next;
+		}
+		if (objectsize < (char *)segmentptr + segmentsize - tempseg -> size - (char *)tempseg - 24){
+			tempseg -> next =(struct mapper *)((char *)tempseg + 12 + (tempseg -> size));
+			tempseg -> next -> next = NULL;
+			tempseg -> next -> size = objectsize;
+			return (tempseg -> next) + 1;
+		}
+	}
 	return (NULL);		// if not success
 }
 
