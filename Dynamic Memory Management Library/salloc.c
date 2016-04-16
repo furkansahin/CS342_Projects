@@ -60,7 +60,6 @@ void *s_alloc(int objectsize)
 		struct mapper * tempseg = (struct mapper *)segmentptr;
 		while (tempseg -> next != NULL){
 			if (objectsize + sizeof(struct mapper) <= (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper)){
-
 				struct mapper *temp = tempseg -> next;
 				tempseg -> next = (struct mapper *)((char *)tempseg + sizeof(struct mapper) + (tempseg -> size));
 				tempseg -> next -> next = temp;
@@ -71,7 +70,6 @@ void *s_alloc(int objectsize)
 		}
 		if (objectsize + sizeof(struct mapper) <= (char *)segmentptr + segmentsize - tempseg -> size - (char *)tempseg -  sizeof(struct mapper)){
 			tempseg -> next =(struct mapper *)((char *)tempseg + sizeof(struct mapper) + (tempseg -> size));
-
 			tempseg -> next -> next = NULL;
 			tempseg -> next -> size = objectsize;
 			return (tempseg -> next) + 1;
@@ -82,8 +80,6 @@ void *s_alloc(int objectsize)
 
 void s_free(void *objectptr)
 {
-
-
 	struct mapper *tempseg = segmentptr;
 	while (tempseg -> next && tempseg -> next != (struct mapper *)objectptr - 1){
 		tempseg = tempseg->next;
@@ -94,7 +90,6 @@ void s_free(void *objectptr)
 		tempseg -> next -> next = NULL;
 		tempseg -> next = temp;
 	}
-
 	return;
 }
 
@@ -107,25 +102,25 @@ void s_print(void)
 																							sizeof(struct mapper));
 	if (!tempseg -> next){
 		printf ("Free = from:%p\t to:%p\t size:%lu\n", tempseg + 1
-																								, (char *)tempseg + segmentsize
-																								, segmentsize - sizeof(struct mapper));
+													, (char *)tempseg + segmentsize
+													, segmentsize - sizeof(struct mapper));
 	}
 	else{
 		while (tempseg){
 				if (tempseg -> size != 0){
 					printf("Alloc = from:%p\t to:%p\t size:%lu\n", tempseg
-																											, (char *)tempseg + tempseg -> size
-																											, tempseg -> size + sizeof(struct mapper));
+																, (char *)tempseg + tempseg -> size
+																, tempseg -> size + sizeof(struct mapper));
 				}
 				if (tempseg -> next && (char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper) > 0){
 					printf("Free = from:%p\t to:%p\t size:%lu\n", tempseg -> size + (char *)tempseg + sizeof(struct mapper),
-																										tempseg -> next,
-																										(char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
+																tempseg -> next,
+																(char *)(tempseg -> next) - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
 				}
 				if (!tempseg -> next){
 					printf("Free = from:%p\t to:%p\t size:%lu\n", tempseg -> size + (char *)tempseg + sizeof(struct mapper),
-																										(char *)segmentptr + segmentsize,
-																										(char *)(segmentptr) + segmentsize - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
+																(char *)segmentptr + segmentsize,
+																(char *)(segmentptr) + segmentsize - tempseg -> size - (char *)tempseg - sizeof(struct mapper));
 				}
 				tempseg = tempseg -> next;
 		}
